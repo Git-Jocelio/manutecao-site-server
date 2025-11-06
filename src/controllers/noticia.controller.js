@@ -1,5 +1,8 @@
 const pool = require('../db');
 
+//teste git
+let msg = 'alterei meu codigo';
+
 // Criar uma nova notícia
 async function createNoticia(req, res) {
   const { titulo, link, postagem, exibir } = req.body;
