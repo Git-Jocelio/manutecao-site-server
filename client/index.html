@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manutenção de Notícias</title>
+
+  <style>
+    /* ======= ESTILO GERAL ======= */
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f5f5f5;
+      padding: 30px;
+    }
+
+    h1 { text-align: center; }
+
+    /* ======= FORMULÁRIO ======= */
+    form {
+      max-width: 600px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    label { display: block; margin-top: 15px; font-weight: bold; }
+    input, textarea {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background: #6ec075;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover { background: #17923c; }
+
+    /* ======= GRID DE NOTÍCIAS ======= */
+    table {
+      width: 90%;
+      margin: 40px auto;
+      border-collapse: collapse;
+      background-color: white;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    th, td {
+      padding: 10px;
+      border-bottom: 1px solid #ccc;
+      text-align: left;
+    }
+
+    th {
+      background-color: #6ec075 ;
+      color: white;
+    }
+
+    tr:hover {
+      background-color: #f1f1f1;
+    }
+
+    .btn-delete {
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      padding: 6px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .btn-delete:hover {
+      background-color: #c82333;
+    }
+
+    .btn-edit {
+      background-color: #ffc107;
+      color: black;
+      border: none;
+      padding: 6px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .btn-edit:hover {
+      background-color: #e0a800;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>AgriLab - Cadastro e Manutenção de Notícias</h1>
+
+  <!-- ======= FORMULÁRIO DE CADASTRO / EDIÇÃO ======= -->
+  <form id="formNoticia">
+    <!-- Campo oculto para armazenar o ID da notícia quando for edição -->
+    <input type="hidden" id="idnoticia" name="idnoticia">
+
+    <label for="titulo">Título</label>
+    <input type="text" id="titulo" name="titulo" required>
+
+    <label for="link">Link da Notícia</label>
+    <input type="text" id="link" name="link">
+
+    <label for="postagem">Data da Postagem</label>
+    <input type="date" id="postagem" name="postagem">
+
+    <label for="imagem">Link da Imagem</label>
+    <input type="text" id="imagem" name="imagem">
+
+    <label>
+      <input type="checkbox" id="exibir" name="exibir" value="true"> Exibir notícia
+    </label>
+
+    <button type="submit">Salvar Notícia</button>
+  </form>
+
+  <!-- Div para mensagens de sucesso/erro -->
+  <div id="mensagem" style="max-width:600px;margin:20px auto;text-align:center;"></div>
+
+  <!-- ======= TABELA DE NOTÍCIAS ======= -->
+  <h2 style="text-align:center;margin-top:50px;">Notícias Cadastradas</h2>
+
+  <table id="tabelaNoticias">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Título</th>
+        <th>Data</th>
+        <th>Exibir</th>
+        <th>Link</th>
+        <th>Imagem</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- As linhas serão geradas pelo JavaScript -->
+    </tbody>
+  </table>
+
+  <!-- ======= SCRIPT JAVASCRIPT COMENTADO ======= -->
+  <script>
+    // ------------------ CAPTURA DOS ELEMENTOS HTML ------------------
+    const form = document.getElementById('formNoticia');           // O formulário
+    const msg = document.getElementById('mensagem');               // Div de mensagens
+    const tabela = document.getElementById('tabelaNoticias').querySelector('tbody'); // Corpo da tabela
+    const idCampo = document.getElementById('idnoticia');          // Campo oculto para edição
+
+    // ------------------ EVENTO DE SUBMISSÃO DO FORM ------------------
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault(); // Impede recarregar a página ao enviar o form
+
+      // Cria objeto com os dados do formulário
+      const formData = {
+        titulo: form.titulo.value,
+        noticia: form.link.value,
+        data: form.postagem.value,
+        exibir: form.exibir.checked,
+        imagem: form.imagem.value
+      };
+
+      try {
+        let response;
+        let data;
+
+        // Se há um ID no campo oculto, estamos editando
+        if (idCampo.value) {
+          // Faz requisição PUT para atualizar
+          response = await fetch(`/api/noticias/${idCampo.value}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData)
+          });
+          data = await response.json();
+          msg.innerHTML = `<p style="color:green;"><strong>${data.message}</strong></p>`;
+        } else {
+          // Caso contrário, faz um POST para criar nova notícia
+          response = await fetch('/api/noticias', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData)
+          });
+          data = await response.json();
+          msg.innerHTML = `<p style="color:green;"><strong>${data.message}</strong></p>`;
+        }
+
+        // Limpa o formulário e campo oculto
+        form.reset();
+        idCampo.value = '';
+
+        // Atualiza a tabela após salvar
+        carregarNoticias();
+
+      } catch (error) {
+        // Se ocorrer erro, exibe mensagem
+        console.error('Erro:', error);
+        msg.innerHTML = `<p style="color:red;">Erro ao salvar notícia</p>`;
+      }
+    });
+
+    // ------------------ FUNÇÃO PARA CARREGAR NOTÍCIAS ------------------
+    async function carregarNoticias() {
+      try {
+        // Faz requisição GET para o backend
+        const response = await fetch('/api/noticias');
+        const noticias = await response.json(); // Converte resposta em JSON
+
+        // Limpa a tabela antes de preencher
+        tabela.innerHTML = '';
+
+        // Percorre cada notícia retornada
+        noticias.forEach(noticia => {
+          const tr = document.createElement('tr'); // Cria uma linha (tr)
+
+          // Define as células (td) com os dados
+          tr.innerHTML = `
+            <td>${noticia.idnoticia}</td>
+            <td>${noticia.titulo}</td>
+            <td>${noticia.postagem ? new Date(noticia.postagem).toLocaleDateString('pt-BR') : '-'}</td>
+            <td>${noticia.exibir ? 'Sim' : 'Não'}</td>
+            <td><a href="${noticia.link}" target="_blank">Ver link</a></td>
+            <td>${noticia.imagem ? `<a href="${noticia.imagem}" target="_blank">Imagem</a>` : '-'}</td>
+            <td>
+              <button class="btn-edit" onclick="editarNoticia(${noticia.idnoticia})">Editar</button>
+              <button class="btn-delete" onclick="deletarNoticia(${noticia.idnoticia})">Excluir</button>
+            </td>
+          `;
+
+          // Adiciona a linha à tabela
+          tabela.appendChild(tr);
+        });
+
+      } catch (error) {
+        console.error('Erro ao carregar notícias:', error);
+      }
+    }
+
+    // ------------------ FUNÇÃO PARA EXCLUIR NOTÍCIA ------------------
+    async function deletarNoticia(id) {
+      // Confirmação antes de excluir
+      if (!confirm('Tem certeza que deseja excluir esta notícia?')) return;
+
+      try {
+        // Requisição DELETE para o backend
+        const response = await fetch(`/api/noticias/${id}`, { method: 'DELETE' });
+        const data = await response.json();
+
+        // Mensagem de sucesso e atualização da tabela
+        msg.innerHTML = `<p style="color:green;"><strong>${data.message}</strong></p>`;
+        carregarNoticias();
+
+      } catch (error) {
+        console.error('Erro ao excluir notícia:', error);
+        msg.innerHTML = `<p style="color:red;">Erro ao excluir notícia</p>`;
+      }
+    }
+
+    // ------------------ FUNÇÃO PARA EDITAR NOTÍCIA ------------------
+    async function editarNoticia(id) {
+      try {
+        // Faz GET para buscar os dados da notícia específica
+        const response = await fetch(`/api/noticias`);
+        const noticias = await response.json();
+
+        // Procura a notícia pelo ID
+        const noticia = noticias.find(n => n.idnoticia === id);
+
+        // Preenche o formulário com os dados encontrados
+        if (noticia) {
+          idCampo.value = noticia.idnoticia;                // Guarda o ID oculto
+          form.titulo.value = noticia.titulo;               // Título
+          form.link.value = noticia.link;   // Link da notícia
+          form.postagem.value = noticia.postagem ? noticia.postagem.split('T')[0] : ''; // Data
+          form.exibir.checked = noticia.exibir;             // Checkbox
+          form.imagem.value = noticia.imagem;     // Link da imagem
+          msg.innerHTML = `<p style="color:blue;">Editando notícia ID ${noticia.idnoticia}</p>`;
+        }
+
+      } catch (error) {
+        console.error('Erro ao carregar notícia para edição:', error);
+      }
+    }
+
+    // ------------------ INICIALIZAÇÃO ------------------
+    // Carrega as notícias assim que a página for aberta
+    carregarNoticias();
+  </script>
+</body>
+</html>

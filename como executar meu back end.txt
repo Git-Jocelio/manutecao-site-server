@@ -1,0 +1,8 @@
+como executar meu back end
+
+abrir a pasta server do projeto no vscode
+
+no terminal digitar : node src/index.js
+
+se tudo der certo mostra a mensagem:
+Servidor rodando na porta 3000

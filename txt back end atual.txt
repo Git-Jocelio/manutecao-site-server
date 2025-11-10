@@ -1,0 +1,593 @@
+pasta SEVER
+ server/http
+
+ noticias.http
+### Listar as notícias
+GET http://localhost:3000/api/noticias
+
+### Criar uma notícia
+POST http://localhost:3000/api/noticias
+Content-Type: application/json
+
+{
+ "titulo":"Laboratório de Sensoriamento Remoto em Agricultura",
+ "link":"http://www.dsr.inpe.br/DSR/laboratorios/AgriRS_Lab",
+ "postagem": "2025-10-01",
+ "exibir": true
+}
+
+### Criar uma notícia
+POST http://localhost:3000/api/noticias
+Content-Type: application/json
+
+{
+ "titulo":"AgriRS Lab, desenvolvemos pesquisas voltadas para a produção de ciência",
+ "link":"https://github.com/agrirslab",
+ "postagem": "2025-08-21",
+ "exibir": true
+}
+
+### Atualizar uma notícia
+PUT http://localhost:3000/api/noticias/1
+Content-Type: application/json
+
+
+{
+ "titulo":"LABORATÓRIO de Sensoriamento Remoto em Agricultura",
+ "link":"http://www.dsr.inpe.br/DSR/laboratorios/AgriRS_Lab",
+ "postagem": "2025-10-22",
+ "exibir": true
+}
+
+### Excluir uma notícia
+DELETE http://localhost:3000/api/noticias/1
+
+
+ oportunidades.http
+
+### Listar as notícias
+GET http://localhost:3000/api/oportunidades
+
+### Criar uma oportunidade
+POST http://localhost:3000/api/oportunidades
+Content-Type: application/json
+
+{
+ "titulo":"Bolsista de IC",
+ "descricao":"Contratação de bolsista para auxiliar na análise e preparação de dados",
+ "validade": "2025-11-01",
+ "exibir": "true"
+}
+
+### Criar uma oportunidade
+POST http://localhost:3000/api/oportunidades
+Content-Type: application/json
+
+{
+ "titulo":"Bolsista de desenvolvimento",
+ "descricao":"Contratação de bolsista para codificar scripts Python",
+ "validade": "2025-10-21",
+ "exibir": "true"
+}
+
+### Atualizar uma oportunidade
+PUT http://localhost:3000/api/oportunidades/1
+Content-Type: application/json
+
+{
+ "titulo":"BOLSISTA de desenvolvimento",
+ "descricao":"Contratação de bolsista para codificar scripts Python",
+ "validade": "2025-10-21",
+ "exibir": "true"
+}
+
+### Atualizar uma oportunidade
+DELETE http://localhost:3000/api/oportunidades/3
+
+
+ publicacoes.http
+
+### Listar as publicações
+GET http://localhost:3000/api/publicacoes
+
+### Criar uma publicação
+POST http://localhost:3000/api/publicacoes
+Content-Type: application/json
+
+{
+ "texto":"Alcântara, E., Novo, E., Stech, J., Lorenzzetti, J., Barbosa, C., Assireu, A., and Souza, A.: A contribution to understanding the turbidity behaviour in an Amazon floodplain, Hydrol. Earth Syst. Sci., 14, 351–364, , 2010.",
+ "ano":"2010", 
+ "link": "https://hess.copernicus.org/articles/14/351/2010/hess-14-351-2010.html",
+ "doi":"https://doi.org/10.5194/hess-14-351-2010" 
+}
+
+### Criar uma publicação
+POST http://localhost:3000/api/publicacoes
+Content-Type: application/json
+
+{
+ "texto":"Marcelo Curtarelli, Enner Alcântara, Camilo Rennó, José Stech,Effects of cold fronts on MODIS-derived sensible and latent heat fluxes in Itumbiara reservoir (Central Brazil), Advances in Space Research,Volume 52, Issue 9,2013",
+ "ano":"2013", 
+ "link": "https://www.sciencedirect.com/science/article/abs/pii/S0273117713004663",
+ "doi":"https://doi.org/10.1016/j.asr.2013.07.037" 
+}
+
+### Atualizar uma publicação
+PUT http://localhost:3000/api/publicacoes/1
+Content-Type: application/json
+
+{
+ "texto":"ALCÂNTARA, E., Novo, E., Stech, J., Lorenzzetti, J., Barbosa, C., Assireu, A., and Souza, A.: A contribution to understanding the turbidity behaviour in an Amazon floodplain, Hydrol. Earth Syst. Sci., 14, 351–364, , 2010.",
+ "ano":"2011", 
+ "link": "https://hess.copernicus.org/articles/14/351/2010/hess-14-351-2010.html",
+ "doi":"https://doi.org/10.5194/hess-14-351-2010" 
+}
+
+### Atualizar uma publicação
+DELETE http://localhost:3000/api/publicacoes/1
+
+pasta server/src/controllers
+
+noticia.controller.js
+
+const pool = require('../db');
+
+//teste git
+let msg = 'alterei meu codigo';
+
+// Criar uma nova notícia
+async function createNoticia(req, res) {
+  const { titulo, link, postagem, exibir } = req.body;
+  const image = req.file ? `/uploads/${req.file.filename}` : null;
+
+  try {
+    const result = await pool.query(
+      `INSERT INTO noticias (titulo, link, postagem, exibir, image)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING *`,
+      [titulo, link, postagem, exibir, image]
+    );
+
+    const noticia = result.rows[0];
+    res.status(201).json({
+      message: 'Notícia criada com sucesso!',
+      noticia
+    });
+  } catch (error) {
+    console.error('Erro ao criar notícia:', error);
+    res.status(500).json({ error: 'Erro ao criar notícia' });
+  }
+}
+
+// Obter todas as notícias
+async function getAllNoticias(req, res) {
+  try {
+    const result = await pool.query('SELECT * FROM noticias WHERE exibir = TRUE ORDER BY idnoticia DESC');
+    res.status(200).json(result.rows);
+  } catch (error) {
+    console.error('Erro ao buscar notícias:', error);
+    res.status(500).json({ error: 'Erro ao buscar notícias' });
+  }
+};
+
+// Atualizar uma notícia existente
+async function updateNoticia(req, res) {
+  const { id } = req.params;
+  const { titulo, link, postagem, exibir } = req.body;
+
+  try {
+    const result = await pool.query(
+      `UPDATE noticias
+       SET titulo = $1, link = $2, postagem = $3, exibir = $4
+       WHERE idnoticia = $5
+       RETURNING *`,
+      [titulo, link, postagem, exibir, id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Notícia não encontrada para atualização' });
+    }
+
+    res.status(200).json({
+      message: 'Notícia atualizada com sucesso!',
+      noticia: result.rows[0]
+    });
+  } catch (error) {
+    console.error('Erro ao atualizar notícia:', error);
+    res.status(500).json({ error: 'Erro ao atualizar notícia' });
+  }
+}
+
+// Deletar uma notícia
+async function deleteNoticia(req, res) {
+  const { id } = req.params;
+
+  try {
+    const result = await pool.query(
+      'DELETE FROM noticias WHERE idnoticia = $1 RETURNING *',
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Notícia não encontrada para exclusão' });
+    }
+
+    res.status(200).json({ message: 'Notícia deletada com sucesso!' });
+  } catch (error) {
+    console.error('Erro ao deletar notícia:', error);
+    res.status(500).json({ error: 'Erro ao deletar notícia' });
+  }
+}
+
+module.exports = {
+  createNoticia,
+  getAllNoticias,
+  updateNoticia,
+  deleteNoticia
+};
+
+oportunidade.controller.js
+const pool = require('../db');
+
+// Criar uma nova oportunidade
+async function createOportunidade(req, res) {
+  const { titulo, descricao, validade, exibir } = req.body;
+
+  try {
+    const result = await pool.query(
+      `INSERT INTO oportunidades (titulo, descricao, validade, exibir)
+       VALUES ($1, $2, $3, $4)
+       RETURNING *`,
+      [titulo, descricao, validade, exibir]
+    );
+
+    const oportunidade = result.rows[0];
+    res.status(201).json({
+      message: 'Oportunidade criada com sucesso!',
+      oportunidade
+    });
+  } catch (error) {
+    console.error('Erro ao criar oportunidade:', error);
+    res.status(500).json({ error: 'Erro ao criar oportunidade' });
+  }
+}
+
+// Obter todas as oportunidades
+async function getAllOportunidades(req, res) {
+  try {
+    const result = await pool.query('SELECT * FROM oportunidades WHERE exibir = true ORDER BY idoportunidade DESC');
+    res.status(200).json(result.rows);
+  } catch (error) {
+    console.error('Erro ao buscar oportunidades:', error);
+    res.status(500).json({ error: 'Erro ao buscar oportunidades' });
+  }
+}
+
+// Atualizar uma oportunidade existente
+async function updateOportunidade(req,res) {
+  const { id } = req.params;
+  const { titulo, descricao, validade, exibir } = req.body;
+
+  try {
+    const result = await pool.query(
+      `UPDATE oportunidades
+       SET titulo = $1, descricao = $2, validade = $3, exibir = $4
+       WHERE idoportunidade = $5
+       RETURNING *`,
+      [titulo, descricao, validade, exibir, id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Oportunidade não encontrada para atualização' });
+    }
+
+    res.status(200).json({
+      message: 'Oportunidade atualizada com sucesso!',
+      oportunidade: result.rows[0]
+    });
+  } catch (error) {
+    console.error('Erro ao atualizar oportunidade:', error);
+    res.status(500).json({ error: 'Erro ao atualizar oportunidade' });
+  }
+}
+
+// Deletar uma oportunidade
+async function deleteOportunidade(req, res) {
+  const { id } = req.params;
+
+  try {
+    const result = await pool.query(
+      'DELETE FROM oportunidades WHERE idoportunidade = $1 RETURNING *',
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Oportunidade não encontrada para exclusão' });
+    }
+
+    res.status(200).json({ message: 'Oportunidade deletada com sucesso!' });
+  } catch (error) {
+    console.error('Erro ao deletar oportunidade:', error);
+    res.status(500).json({ error: 'Erro ao deletar oportunidade' });
+  }
+}
+
+module.exports = {
+  createOportunidade,
+  getAllOportunidades,
+  updateOportunidade,
+  deleteOportunidade
+};
+
+
+publicacao.controller.js
+
+const pool = require('../db');
+
+// Criar uma nova publicação
+async function createPublicacao(req, res) {
+  const { texto, ano, link, doi } = req.body;
+  
+  try {
+    const result = await pool.query(
+      'INSERT INTO publicacoes (texto, ano, link, doi) VALUES ($1, $2, $3, $4) RETURNING *',
+      [texto, ano, link, doi]
+    );
+    
+    const publicacao = result.rows[0];
+    res.status(201).json({
+      message: 'Publicação criada com sucesso!',
+      publicacao
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao criar publicação' });
+  }
+}
+
+// Obter todas as publicações
+async function getAllPublicacoes(req, res) {
+  try {
+    const result = await pool.query('SELECT * FROM publicacoes ORDER BY ano DESC');
+    res.status(200).json(result.rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao buscar publicações' });
+  }
+}
+
+// Atualizar uma publicação existente
+async function updatePublicacao(req, res) {
+  const { id } = req.params;
+  const { texto, ano, link, doi } = req.body;
+
+  try {
+    const result = await pool.query(
+      'UPDATE publicacoes SET texto = $1, ano = $2, link = $3, doi = $4 WHERE idpublicacao = $5 RETURNING *',
+      [texto, ano, link, doi, id]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Publicação não encontrada para atualização' });
+    }
+
+    const updatedPublicacao = result.rows[0];
+    res.status(200).json({
+      message: 'Publicação atualizada com sucesso!',
+      publicacao: updatedPublicacao
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao atualizar publicação' });
+  }
+}
+
+// Deletar uma publicação
+async function deletePublicacao(req, res) {
+  const { id } = req.params;
+
+  try {
+    const result = await pool.query('DELETE FROM publicacoes WHERE idpublicacao = $1 RETURNING *', [id]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Publicação não encontrada para exclusão' });
+    }
+
+    res.status(200).json({ message: 'Publicação deletada com sucesso!' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao deletar publicação' });
+  }
+}
+
+module.exports = {
+  createPublicacao,
+  getAllPublicacoes,
+  updatePublicacao,
+  deletePublicacao
+};
+
+pasta server/src/routes
+index.js
+const express = require("express");
+const router = express.Router();
+
+const publicacao = require("./publicacao.routes");
+const noticia = require("./noticia.routes");
+const oportunidade = require("./oportunidade.routes");
+
+router.use('/publicacoes', publicacao);
+router.use('/noticias', noticia);
+router.use('/oportunidades', oportunidade);
+
+module.exports = router;
+
+
+noticia.routes.js
+const express = require('express');
+const multer = require("multer");
+const router = express.Router();
+const noticiaController = require('../controllers/noticia.controller');
+
+// Configuração do multer para salvar imagens em /uploads
+const storage = multer.diskStorage({
+    destination: (_req, _file, cb) => {
+      cb(null, path.join(__dirname, "..", "uploads"));
+    },
+    filename: (_req, file, cb) => {
+      const uniqueName = `${Date.now()}-${file.originalname}`;
+      cb(null, uniqueName);
+    },
+  });
+  
+  const upload = multer({
+    storage,
+    fileFilter: (_req, file, cb) => {
+      const allowed = ["image/png", "image/jpeg", "image/jpg"];
+      if (!allowed.includes(file.mimetype)) {
+        return cb(new Error("Formato de imagem inválido. Use PNG ou JPEG."));
+      }
+      cb(null, true);
+    },
+  });
+
+// Rotas para o CRUD de notícias
+router.post('/', upload.single('imagem'), noticiaController.createNoticia);
+router.get('/', noticiaController.getAllNoticias);
+router.put('/:id', noticiaController.updateNoticia);
+router.delete('/:id', noticiaController.deleteNoticia);
+
+module.exports = router;
+
+oportunidade.routes.js
+const express = require("express");
+const router = express.Router();
+const oportunidadeController = require("../controllers/oportunidade.controller");
+
+// Rotas para o CRUD de oportunidades
+router.post("/", oportunidadeController.createOportunidade);
+router.get("/", oportunidadeController.getAllOportunidades);
+router.put("/:id", oportunidadeController.updateOportunidade);
+router.delete("/:id", oportunidadeController.deleteOportunidade);
+
+module.exports = router;
+
+
+
+publicacao.routes.js
+const express = require('express');
+const router = express.Router();
+const publicacaoController = require('../controllers/publicacao.controller');
+
+// Rotas para o CRUD de publicações
+router.post('/', publicacaoController.createPublicacao);
+router.get('/', publicacaoController.getAllPublicacoes);
+router.put('/:id', publicacaoController.updatePublicacao);
+router.delete('/:id', publicacaoController.deletePublicacao);
+
+module.exports = router;
+
+pasta server/src/uploads
+vazia
+
+pasta server/src/db.js
+const { Pool } = require("pg");
+const dotenv = require("dotenv");
+// Carrega  as variáveis de ambiente definidas no arquivo .env
+dotenv.config();
+
+const pool = new Pool({
+  host: process.env.POSTGRES_HOST,
+  user: process.env.POSTGRES_USER,
+  password: process.env.POSTGRES_PASSWORD,
+  database: process.env.POSTGRES_DB,
+  port: process.env.POSTGRES_PORT
+});
+
+module.exports = pool;
+
+pasta server/src/db.sql
+DROP TABLE IF EXISTS publicacoes, oportunidades, noticias;
+
+CREATE TABLE noticias (
+  idnoticia SERIAL,
+  titulo VARCHAR(250) NULL,
+  link VARCHAR(250) NULL,
+  postagem DATE NULL,
+  exibir BOOL NULL,
+  image VARCHAR NULL,
+  PRIMARY KEY(idnoticia)
+);
+
+CREATE TABLE oportunidades (
+  idoportunidade SERIAL,
+  titulo VARCHAR(250) NULL,
+  descricao TEXT NULL,
+  validade DATE NULL,
+  exibir BOOL NULL,
+  PRIMARY KEY(idoportunidade)
+);
+
+CREATE TABLE publicacoes (
+  idpublicacao SERIAL,
+  texto TEXT NULL,
+  ano INTEGER NULL,
+  link VARCHAR(250) NULL,
+  doi VARCHAR(250) NULL,
+  image VARCHAR NULL,
+  PRIMARY KEY(idpublicacao)
+);
+
+
+
+pasta server/src/index.js
+// Importa o framework Express para criar e gerenciar o servidor web
+const express = require("express");
+const rotas = require("./routes");
+
+const path = require('path');
+const dotenv = require("dotenv");
+
+// Carrega as variáveis de ambiente definidas no arquivo .env
+dotenv.config();
+
+// Cria uma instância do aplicativo Express
+const app = express();
+
+// Middleware para permitir o envio de dados em formato JSON no corpo das requisições
+app.use(express.json());
+
+// Lê a variável PORT definida no arquivo .env
+const port = process.env.PORT;
+
+// Inicia o servidor na porta definida e exibe uma mensagem no console
+app.listen(port, function () {
+  console.log(`Servidor rodando na porta ${port}`);
+});
+
+// Servir imagens estáticas da pasta uploads
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Usando as rotas
+app.use('/api', rotas);
+
+// Middleware para rotas não encontradas
+app.use(function(_req, res){
+  res.status(404).json({ error: "Rota não encontrada"});
+});
+
+pasta server/src/.env
+PORT = 3000
+
+POSTGRES_HOST = localhost
+POSTGRES_USER = postgres # Altere conforme o seu usuário
+POSTGRES_PASSWORD = postgres # Altere conforme a sua senha
+POSTGRES_DB = abp # Nome do banco criado no pgAdmin
+
+POSTGRES_PORT = 5432 # Porta padrão do PostgreSQL
+
+pasta server/src/.gitignore
+node_modules
+
+
+
