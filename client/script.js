@@ -18,8 +18,8 @@ async function carregarNoticias() {
         <h2>${noticia.titulo}</h2>
         <p><a href="${noticia.link}" target="_blank">Acessar notícia</a></p>
         <p><strong>Postagem:</strong> ${new Date(noticia.postagem).toLocaleDateString()}</p>
-        <p><strong>Exibir Noticia :</strong> ${noticia.exibir}</p>
-
+        
+        <p><strong>Exibir:</strong> ${noticia.exibir ? 'Sim' : 'Não'}</p>
       `;
 
       lista.appendChild(item);
@@ -39,7 +39,7 @@ async function adicionarNoticia(event) {
   const link = document.getElementById("link").value.trim();
   const postagem = document.getElementById("postagem").value;
   const mensagem = document.getElementById("mensagem");
-  const exibir = document.getElementById("exibir");
+  const exibir = document.getElementById("exibir").value;
 
   if (!titulo || !link || !postagem) {
     mensagem.textContent = "Preencha todos os campos!";
