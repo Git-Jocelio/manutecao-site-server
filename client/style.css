@@ -1,27 +1,68 @@
 body {
   font-family: Arial, sans-serif;
-  margin: 20px;
-  background-color: #f9f9f9;
+  margin: 20px auto;
+  max-width: 800px;
+  background-color: #f8f9fa;
+  color: #333;
 }
 
-h1 {
+.site-header {
   text-align: center;
-  color: #333;
+  margin-bottom: 30px;
+}
+
+.subtitle {
+  color: #666;
+}
+
+#form-section {
+  background: white;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  margin-bottom: 25px;
+}
+
+#form-noticia {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+#form-noticia input {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+#form-noticia button {
+  background-color: #2f8f6f;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 8px 15px;
+  cursor: pointer;
+}
+
+#form-noticia button:hover {
+  background-color: #256e56;
 }
 
 .noticia {
   background: white;
   padding: 15px;
-  margin-bottom: 10px;
+  margin-bottom: 15px;
   border-radius: 8px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
 .noticia h2 {
-  color: #0077cc;
+  margin: 0 0 8px 0;
+  color: #2f8f6f;
 }
 
-.noticia a {
-  color: #0077cc;
-  text-decoration: none;
+#mensagem {
+  margin-top: 10px;
+  font-weight: bold;
 }

@@ -18,6 +18,8 @@ async function carregarNoticias() {
         <h2>${noticia.titulo}</h2>
         <p><a href="${noticia.link}" target="_blank">Acessar notícia</a></p>
         <p><strong>Postagem:</strong> ${new Date(noticia.postagem).toLocaleDateString()}</p>
+        <p><strong>Exibir Noticia :</strong> ${noticia.exibir}</p>
+
       `;
 
       lista.appendChild(item);
@@ -28,5 +30,51 @@ async function carregarNoticias() {
   }
 }
 
-// Chama a função assim que a página for carregada
+//////////////////
+// 🔹 Função para adicionar nova notícia (POST)
+async function adicionarNoticia(event) {
+  event.preventDefault(); // evita recarregar a página
+
+  const titulo = document.getElementById("titulo").value.trim();
+  const link = document.getElementById("link").value.trim();
+  const postagem = document.getElementById("postagem").value;
+  const mensagem = document.getElementById("mensagem");
+  const exibir = document.getElementById("exibir");
+
+  if (!titulo || !link || !postagem) {
+    mensagem.textContent = "Preencha todos os campos!";
+    mensagem.style.color = "red";
+    return;
+  }
+
+  mensagem.textContent = "Salvando...";
+  mensagem.style.color = "black";
+
+  try {
+    const resposta = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ titulo, link, postagem, exibir })
+    });
+
+    if (!resposta.ok) {
+      throw new Error("Erro ao salvar notícia.");
+    }
+
+    mensagem.textContent = "✅ Notícia adicionada com sucesso!";
+    mensagem.style.color = "green";
+    document.getElementById("form-noticia").reset();
+
+    // recarrega a lista para mostrar a nova notícia
+    carregarNoticias();
+
+  } catch (erro) {
+    console.error(erro);
+    mensagem.textContent = "❌ Erro ao salvar notícia.";
+    mensagem.style.color = "red";
+  }
+}
+///////////////////
+// 🔹 Eventos e inicialização
+document.getElementById("form-noticia").addEventListener("submit", adicionarNoticia);
 carregarNoticias();
