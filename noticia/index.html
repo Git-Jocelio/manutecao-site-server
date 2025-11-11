@@ -1,19 +1,26 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Notícias INPE</title>
   <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
   <header class="site-header">
     <h1>AgriLab - Adicionar, Alterar ou Excluir Notícias</h1>
     <p class="subtitle">Últimas notícias do laboratório</p>
   </header>
 
-<!-- 🆕 Formulário de inclusão -->
-  <section id="form-section">
+  <!-- 🔘 Botão para mostrar o formulário -->
+  <section id="botao-section">
+    <button id="btn-mostrar-form">📰 Cadastrar nova notícia</button>
+  </section> <br>
+
+  <!-- 🆕 Formulário de inclusão -->
+  <section id="form-section" style="display: none;">
     <h3>Adicionar nova notícia</h3>
     <form id="form-noticia">
       <input type="text" id="titulo" placeholder="Título da notícia" required>
@@ -26,11 +33,34 @@
     <p id="mensagem"></p>
   </section>
 
-
+  <!--
   <div id="lista-noticias">
-    <!-- As notícias serão inseridas aqui via JavaScript -->
+    As notícias serão inseridas aqui via JavaScript
   </div>
+   -->
+
+  <!-- Tabela de notícias -->
+  <section id="tabela-section">
+    <h3>Lista de Notícias</h3>
+    <table border="1" width="100%">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Título</th>
+          <th>Link</th>
+          <th>Postagem</th>
+          <th>Exibir</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody id="lista-noticias">
+        <!-- As notícias serão inseridas aqui via JavaScript -->
+      </tbody>
+    </table>
+  </section>
 
   <script src="script.js"></script>
+
 </body>
+
 </html>

@@ -7,26 +7,30 @@ async function carregarNoticias() {
     const resposta = await fetch(API_URL);
     const noticias = await resposta.json();
 
-    const lista = document.getElementById("lista-noticias");
-    lista.innerHTML = ""; // limpa antes de inserir
+    const tabela = document.getElementById("lista-noticias");
+    tabela.innerHTML = ""; // limpa antes de inserir
 
     noticias.forEach(noticia => {
-      const item = document.createElement("div");
-      item.classList.add("noticia");
+      const linha = document.createElement("tr");
 
-      item.innerHTML = `
-        <h2>${noticia.titulo}</h2>
-        <p><a href="${noticia.link}" target="_blank">Acessar notícia</a></p>
-        <p><strong>Postagem:</strong> ${new Date(noticia.postagem).toLocaleDateString()}</p>
-        
-        <p><strong>Exibir:</strong> ${noticia.exibir ? 'Sim' : 'Não'}</p>
+      linha.innerHTML = `
+        <td>${noticia.idnoticia}</td>
+        <td>${noticia.titulo}</td>
+        <td><a href="${noticia.link}" target="_blank">Acessar</a></td>
+        <td>${new Date(noticia.postagem).toLocaleDateString()}</td>
+        <td>${noticia.exibir ? "Sim" : "Não"}</td>
+        <td>
+          <button onclick="editarNoticia(${noticia.idnoticia})">✏️ Editar</button>
+          <button onclick="excluirNoticia(${noticia.idnoticia})">🗑️ Excluir</button>
+        </td>
       `;
 
-      lista.appendChild(item);
+      tabela.appendChild(linha);
     });
   } catch (erro) {
     console.error("Erro ao carregar notícias:", erro);
-    document.getElementById("lista-noticias").innerText = "Erro ao carregar notícias.";
+    document.getElementById("lista-noticias").innerHTML =
+      `<tr><td colspan="6">Erro ao carregar notícias.</td></tr>`;
   }
 }
 
@@ -77,4 +81,39 @@ async function adicionarNoticia(event) {
 ///////////////////
 // 🔹 Eventos e inicialização
 document.getElementById("form-noticia").addEventListener("submit", adicionarNoticia);
+
+// ✅ Função para excluir uma notícia (DELETE)
+async function excluirNoticia(id) {
+  if (!confirm("Deseja realmente excluir esta notícia?")) return;
+
+  try {
+    const response = await fetch(`${API_URL}/${id}`, {
+      method: "DELETE",
+    });
+
+    const data = await response.json();
+    alert(data.message || "Notícia excluída com sucesso!");
+
+    carregarNoticias(); // recarrega a lista
+  } catch (error) {
+    console.error("Erro ao excluir notícia:", error);
+    alert("Erro ao excluir notícia.");
+  }
+}
+
+//Controle de exibição do formulário
+const botaoMostrarForm = document.getElementById("btn-mostrar-form");
+const formSection = document.getElementById("form-section");
+
+botaoMostrarForm.addEventListener("click", () => {
+  // Alterna entre mostrar e ocultar o formulário
+  const visivel = formSection.style.display === "block";
+
+  formSection.style.display = visivel ? "none" : "block";
+  botaoMostrarForm.textContent = visivel
+    ? "📰 Cadastrar nova notícia"
+    : "❌ Fechar formulário";
+});
+
+
 carregarNoticias();
