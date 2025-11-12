@@ -1,6 +1,7 @@
 // URL da API
 const API_URL = "http://localhost:3000/api/noticias";
 
+
 // Função para buscar e exibir as notícias
 async function carregarNoticias() {
   try {
@@ -28,14 +29,15 @@ async function carregarNoticias() {
       tabela.appendChild(linha);
     });
   } catch (erro) {
-    console.error("Erro ao carregar notícias:", erro);
+    
     document.getElementById("lista-noticias").innerHTML =
       `<tr><td colspan="6">Erro ao carregar notícias.</td></tr>`;
   }
 }
 
-//////////////////
-// 🔹 Função para adicionar nova notícia (POST)
+
+// 🔹 Adicionar ou atualizar notícia (POST ou PUT)
+
 async function adicionarNoticia(event) {
   event.preventDefault(); // evita recarregar a página
 
@@ -43,7 +45,7 @@ async function adicionarNoticia(event) {
   const link = document.getElementById("link").value.trim();
   const postagem = document.getElementById("postagem").value;
   const mensagem = document.getElementById("mensagem");
-  const exibir = document.getElementById("exibir").value;
+  const exibir = document.getElementById("exibir").checked;
 
   if (!titulo || !link || !postagem) {
     mensagem.textContent = "Preencha todos os campos!";
@@ -51,34 +53,44 @@ async function adicionarNoticia(event) {
     return;
   }
 
+  // Descobre se estamos editando ou criando
+  const idEditando = document
+    .getElementById("form-noticia")
+    .dataset.editandoId || null;
+
+  const metodo = idEditando ? "PUT" : "POST";
+  const url = idEditando ? `${API_URL}/${idEditando}` : API_URL;
+
   mensagem.textContent = "Salvando...";
   mensagem.style.color = "black";
 
   try {
-    const resposta = await fetch(API_URL, {
-      method: "POST",
+    const resposta = await fetch(url, {
+      method: metodo,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ titulo, link, postagem, exibir })
+      body: JSON.stringify({ titulo, link, postagem, exibir }),
     });
 
     if (!resposta.ok) {
       throw new Error("Erro ao salvar notícia.");
     }
 
-    mensagem.textContent = "✅ Notícia adicionada com sucesso!";
+    mensagem.textContent = idEditando
+      ? "✅ Notícia atualizada com sucesso!"
+      : "✅ Notícia adicionada com sucesso!";
     mensagem.style.color = "green";
+
     document.getElementById("form-noticia").reset();
+    delete document.getElementById("form-noticia").dataset.editandoId; // limpa modo edição
 
-    // recarrega a lista para mostrar a nova notícia
-    carregarNoticias();
-
+    carregarNoticias(); // recarrega lista
   } catch (erro) {
-    console.error(erro);
+    
     mensagem.textContent = "❌ Erro ao salvar notícia.";
     mensagem.style.color = "red";
   }
 }
-///////////////////
+
 // 🔹 Eventos e inicialização
 document.getElementById("form-noticia").addEventListener("submit", adicionarNoticia);
 
@@ -96,10 +108,43 @@ async function excluirNoticia(id) {
 
     carregarNoticias(); // recarrega a lista
   } catch (error) {
-    console.error("Erro ao excluir notícia:", error);
+    
     alert("Erro ao excluir notícia.");
   }
 }
+
+// Função para EDITAR uma notícia
+async function editarNoticia(id) {
+  try {
+    // Busca a notícia específica na API
+    const resposta = await fetch(`${API_URL}/${id}`);
+    if (!resposta.ok) throw new Error("Erro ao buscar notícia para edição.");
+
+    const noticia = await resposta.json();
+
+    // Torna o formulário visível (caso esteja oculto)
+    formSection.style.display = "block";
+    botaoMostrarForm.textContent = "❌ Fechar formulário";
+
+    // Preenche os campos do formulário com os dados da notícia
+    document.getElementById("titulo").value = noticia.titulo;
+    document.getElementById("link").value = noticia.link;
+    document.getElementById("postagem").value = noticia.postagem.split("T")[0];
+    document.getElementById("exibir").checked = noticia.exibir;
+
+    // Guarda o ID da notícia em edição (vamos usar depois no update)
+    document.getElementById("form-noticia").dataset.editandoId = noticia.idnoticia;
+
+    // Exibe mensagem temporária
+    const mensagem = document.getElementById("mensagem");
+    mensagem.textContent = "✏️ Editando notícia ID " + noticia.idnoticia;
+    mensagem.style.color = "blue";
+  } catch (erro) {
+    
+    alert("Erro ao carregar notícia para edição.");
+  }
+}
+
 
 //Controle de exibição do formulário
 const botaoMostrarForm = document.getElementById("btn-mostrar-form");
